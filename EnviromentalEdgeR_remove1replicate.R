@@ -4,7 +4,9 @@ source("./RUVseqModel.R") #load RUV stuff
 load("~/Datos/ARTICULO/Dacthylorhizapolyploids/ResultsRUV_bio3.RData") #This load the bioclim variables
 colnames(data)[1:4]<-c("tB1830_1", "tB1830_2", "tB1833_1", "tB1833_2") #Pool ebudensis and traunsteineri
 
+
 dat = selectSpecies(data, "t", "m", " ", " ", " ")
+
 rownames(biodata2)<-colnames(data)
 biodata3 = biodata2[colnames(dat),]
 biodata3 <- as.data.frame(biodata3)
@@ -28,8 +30,12 @@ normSet = makeRUVrepNormalisedSet(set = set, empircalNonDEgenes = rownames(count
 # X <- ns(envvar, df=3) # Any df between 3 - 5 usually works well.
 #popfactor<-factor(substr(rownames(biodata3),3,6)) #make population factor
 
-
-bio3<-findEdgeRgenes(model = ~biodata3$bio_3+normSet$W, group = NULL, set = set, pvalue = 0.05)
+markreplicates<-c(1,3,9,13,18,20,22,26)
+normSet2<-normSet
+normSet2$W<-normSet2$W[-markreplicates,]
+normSet2$normalizedCounts<-normSet2$normalizedCounts[,-markreplicates]
+set2<-newSeqExpressionSet(counts=counts(set)[,-markreplicates])
+bio5<-findEdgeRgenes(model = ~biodata3$bio_5[-markreplicates]+normSet2$W, group = NULL, set = set2, pvalue = 0.05)
 # As you see, the model for DE takes normSet$W correction factors into account. Also, set = set, edgeR never uses normalizedCounts.
 # If you change biodata3$bio_3 by X we run a non-linear model
 # We can also include a 
