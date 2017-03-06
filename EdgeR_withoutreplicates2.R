@@ -50,8 +50,8 @@ print(etable)
 
 #Visualization
 
-plotbio<-function(cluster){
+plotbio<-function(bioclim,cluster){
 colspecies<-factor(substr(colnames(counttable3),1,1))
-plot(biodata4$bio_5, counttable3[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="Cluster-28751.0-bio5")
+plot(biodata4[bioclim][,1], counttable3[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="")
 legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 }
