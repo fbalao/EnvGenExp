@@ -55,3 +55,11 @@ colspecies<-factor(substr(colnames(counttable3),1,1))
 plot(biodata4[bioclim][,1], counttable3[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="")
 legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 }
+
+#######
+res<-list()
+var<-colnames(biodata2)
+for (i in 1: length(colnames(biodata2))){
+  res[[i]]<-bioclimEdgeR(var[i])
+  }
+names(res)<-var
