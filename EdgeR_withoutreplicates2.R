@@ -49,7 +49,9 @@ print(etable)
 
 
 #Visualization
-colspecies<-factor(substr(colnames(counttable3),1,1))
-plot(biodata4$bio_3, counttable3['Cluster-3636.0',] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="Cluster-28751.0-bio5")
-legend(200,180,legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 
+plotbio<-function(cluster){
+colspecies<-factor(substr(colnames(counttable3),1,1))
+plot(biodata4$bio_5, counttable3[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="Cluster-28751.0-bio5")
+legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
+}
