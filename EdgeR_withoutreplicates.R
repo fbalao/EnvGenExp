@@ -25,7 +25,18 @@ formula<-as.vector(biodata4[bioclim])[,1]
  edesignbio <- model.matrix(~formula)
 
 ## Make new DGEList, normalize by library size, and estimate dispersion allowing possible trend with average count size
-e <- DGEList(counts=counttable3)
+
+  e <- DGEList(counts=counttable3)
+ 
+ #filter (optional?)
+ keep <- rowSums(cpm(e)>0.1) >= 9 
+ e <- e[keep, , keep.lib.sizes=FALSE]
+ 
+ 
+ #recompute library sizes 
+ e$samples$lib.size <- colSums(e$counts)
+
+#Normalizing
 e <- calcNormFactors(e)
 e <- estimateGLMCommonDisp(e, edesignbio)
 e <- estimateGLMTrendedDisp(e, edesignbio)
@@ -50,9 +61,20 @@ print(etable)
 
 #Visualization
 
-plotbio<-function(bioclim,cluster){
-colspecies<-factor(substr(colnames(counttable3),1,1))
-plot(biodata4[bioclim][,1], counttable3[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="")
+#' Plot Gene Expression vs Enviromental data
+#'
+#' @param bioclim Enviromental variable (bioclim_1:20)
+#' @param cluster Contig to plot
+#' @param counttable Count data
+#'
+#' @return
+#' @export
+#'
+#' @examples plotbio("bio_11","Cluster-38451.7", counttable3)
+plotbio<-function(bioclim,cluster,counttable){
+load("~/Datos/ARTICULO/Dacthylorhizapolyploids/ResultsRUV_bio3.RData")
+colspecies<-factor(substr(colnames(counttable),1,1))
+plot(biodata4[bioclim][,1], counttable[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab=bioclim, col=c(2,3)[colspecies], main="")
 legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 }
 

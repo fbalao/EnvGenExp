@@ -30,7 +30,7 @@ normSet = makeRUVrepNormalisedSet(set = set, empircalNonDEgenes = rownames(count
 # X <- ns(envvar, df=3) # Any df between 3 - 5 usually works well.
 #popfactor<-factor(substr(rownames(biodata3),3,6)) #make population factor
 
-markreplicates<-c(1,3,9,13,18,20,22,26)
+markreplicates<-c(2,4,10,14,19,21,23,27)
 normSet2<-normSet
 normSet2$W<-normSet2$W[-markreplicates,]
 normSet2$normalizedCounts<-normSet2$normalizedCounts[,-markreplicates]
@@ -50,6 +50,6 @@ resEdgeRglm
 
 #Visualization
 colspecies<-factor(substr(colnames(dat),1,1))
-plot(biodata3$bio_5, counts(set)['Cluster-12667.0',] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="Cluster-28751.0-bio5")
+plot(biodata3$bio_5, counts(set)['Cluster-6494.1',] , cex=1, pch=16, ylab="Normalized counts", xlab="bio5", col=c(2,3)[colspecies], main="Cluster-28751.0-bio5")
 legend(200,180,legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 

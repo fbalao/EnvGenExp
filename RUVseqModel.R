@@ -173,10 +173,10 @@ findEdgeRgenes = function(model, group, set, pvalue){
   de.genes = rownames(lrt)[as.logical(de)]
   set.seed(1)
   randRes = resEdgeRtopTags[rev(rownames(resEdgeRtopTags)),]
-  #plotSmear(lrt, de.tags = de.genes, cex=0.5, main="MA-plot (p-value <= 0.05)")
-  plot(randRes$table$logCPM, randRes$table$logFC, col=ifelse(randRes$table$FDR <= 0.05, "red", "black"), 
-       cex=ifelse(randRes$table$FDR <= 0.05, 0.4, 0.3), pch = ifelse(randRes$table$FDR <= 0.05, 19, 1), xlab = "logCPM", ylab = "logFC")
-  #plot(resEdgeRtopTags$table$logCPM, resEdgeRtopTags$table$logFC, col=ifelse(resEdgeRtopTags$table$FDR <= 0.05, red, black), cex=ifelse(resEdgeRtopTags$table$FDR <= 0.05, 0.4, 0.3), pch = ifelse(resEdgeRtopTags$table$FDR <= 0.05, 19, 1))
+  #plotSmear(lrt, de.tags = de.genes, cex=0.5, main="MA-plot (p-value <= pvalue)")
+  plot(randRes$table$logCPM, randRes$table$logFC, col=ifelse(randRes$table$FDR <= pvalue, "red", "black"), 
+       cex=ifelse(randRes$table$FDR <= pvalue, 0.4, 0.3), pch = ifelse(randRes$table$FDR <= pvalue, 19, 1), xlab = "logCPM", ylab = "logFC")
+  #plot(resEdgeRtopTags$table$logCPM, resEdgeRtopTags$table$logFC, col=ifelse(resEdgeRtopTags$table$FDR <= pvalue, red, black), cex=ifelse(resEdgeRtopTags$table$FDR <= pvalue, 0.4, 0.3), pch = ifelse(resEdgeRtopTags$table$FDR <= pvalue, 19, 1))
   #plotBCV(y)
   abline(h=c(-2,2), col="blue")
   abline(h=0)
