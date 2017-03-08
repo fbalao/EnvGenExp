@@ -29,15 +29,15 @@ formula<-as.vector(biodata4[bioclim])[,1]
   e <- DGEList(counts=counttable3)
  
  #filter (optional?)
- keep <- rowSums(cpm(e)>0.1) >= 9 
- e <- e[keep, , keep.lib.sizes=FALSE]
+ #keep <- rowSums(cpm(e)>0.1) >= 9 
+ #e <- e[keep, , keep.lib.sizes=FALSE]
  
  
  #recompute library sizes 
  e$samples$lib.size <- colSums(e$counts)
 
 #Normalizing
-e <- calcNormFactors(e)
+e <- calcNormFactors(e,method = "upperquartile")
 e <- estimateGLMCommonDisp(e, edesignbio)
 e <- estimateGLMTrendedDisp(e, edesignbio)
 e <- estimateGLMTagwiseDisp(e, edesignbio)
@@ -71,10 +71,9 @@ print(etable)
 #' @export
 #'
 #' @examples plotbio("bio_11","Cluster-38451.7", counttable3)
-plotbio<-function(bioclim,cluster,counttable){
-load("~/Datos/ARTICULO/Dacthylorhizapolyploids/ResultsRUV_bio3.RData")
-colspecies<-factor(substr(colnames(counttable),1,1))
-plot(biodata4[bioclim][,1], counttable[cluster,] , cex=1, pch=16, ylab="Normalized counts", xlab=bioclim, col=c(2,3)[colspecies], main="")
+plotbio<-function(bioclim,cluster,normcounttable){
+colspecies<-factor(substr(colnames(normcounttable),1,1))
+plot(biodata4[bioclim][,1], cpm(normcounttable$counts)[cluster,] , cex=1, pch=16, ylab="Normalized counts (CPM)", xlab=bioclim, col=c(2,3)[colspecies], main="")
 legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 }
 

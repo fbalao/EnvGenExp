@@ -1,3 +1,5 @@
+bioclimEdgeR_RUVseq<- function(bioclim){
+  library(edgeR) # version 3.16.5
 #load counts
 data = read.table("/home/fbalao/Datos/ARTICULO/Dacthylorhizapolyploids/Dactylorhiza_4xExpression/data/19.01.2017.counts.txt", header = TRUE, row.names = 1) 
 source("./RUVseqModel.R") #load RUV stuff
@@ -35,7 +37,9 @@ normSet2<-normSet
 normSet2$W<-normSet2$W[-markreplicates,]
 normSet2$normalizedCounts<-normSet2$normalizedCounts[,-markreplicates]
 set2<-newSeqExpressionSet(counts=counts(set)[,-markreplicates])
-bio5<-findEdgeRgenes(model = ~biodata3$bio_5[-markreplicates]+normSet2$W, group = NULL, set = set2, pvalue = 0.05)
+env<-as.vector(biodata3[bioclim][-markreplicates,1])
+
+findEdgeRgenes(model = ~env+normSet2$W, group = NULL, set = set2, pvalue = 0.05)
 # As you see, the model for DE takes normSet$W correction factors into account. Also, set = set, edgeR never uses normalizedCounts.
 # If you change biodata3$bio_3 by X we run a non-linear model
 # We can also include a 
@@ -45,7 +49,8 @@ hist(resEdgeRtopTags$table$logFC, breaks = 100)
 # some tests I was using to get the normalisation ok
 
 head(resEdgeRtopTags$table, n = 20L)
-resEdgeRglm
+print(resEdgeRglm)
+}
 # I put result into these two "global" varianble when doing findEdgeRgenes. Not elegant but useful, might have to change this when i publish the code.
 
 #Visualization
