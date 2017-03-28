@@ -1,15 +1,16 @@
 
-bioclimEdgeR<- function(bioclim){
+bioclimEdgeR<- function(data,biodata, bioclim, filtercpm){
 library(edgeR) # version 3.16.5
 #load counts
-counttable = read.table("/home/fbalao/Datos/ARTICULO/Dacthylorhizapolyploids/Dactylorhiza_4xExpression/data/19.01.2017.counts.txt", header = TRUE, row.names = 1) 
+#"/home/fbalao/Datos/ARTICULO/Dacthylorhizapolyploids/Dactylorhiza_4xExpression/data/19.01.2017.counts.txt"
+counttable = read.table(data, header = TRUE, row.names = 1) 
 colnames(counttable)[1:4]<-c("tB1830_1", "tB1830_2", "tB1833_1", "tB1833_2") #Pool ebudensis and traunsteineri
 head(counttable)
 
-#Load climatic variables
-load("~/Datos/ARTICULO/Dacthylorhizapolyploids/ResultsRUV_bio3.RData") #This load the bioclim variables
-rownames(biodata2)<-colnames(counttable)
-biodata3 <- as.data.frame(biodata2)
+# #Load climatic variables
+#load(biodata) #This load the bioclim variables
+#rownames(biodata2)<-colnames(counttable)
+biodata3 <- as.data.frame(biodata)
 
 
 #Remove species and replicates
@@ -29,8 +30,8 @@ formula<-as.vector(biodata4[bioclim])[,1]
   e <- DGEList(counts=counttable3)
  
  #filter (optional?)
- #keep <- rowSums(cpm(e)>0.1) >= 9 
- #e <- e[keep, , keep.lib.sizes=FALSE]
+ keep <- rowSums(cpm(e)>filtercpm) >= 9
+ e <- e[keep, , keep.lib.sizes=FALSE]
  
  
  #recompute library sizes 
@@ -77,10 +78,10 @@ plot(biodata4[bioclim][,1], cpm(normcounttable$counts)[cluster,] , cex=1, pch=16
 legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
 }
 
-#######
-res<-list()
-var<-colnames(biodata2)
-for (i in 1: length(colnames(biodata2))){
-  res[[i]]<-bioclimEdgeR(var[i])
-  }
-names(res)<-var
+####### Loop
+# res<-list()
+# var<-colnames(biodata2)
+# for (i in 1: length(colnames(biodata2))){
+#   res[[i]]<-bioclimEdgeR(var[i])
+#   }
+# names(res)<-var
