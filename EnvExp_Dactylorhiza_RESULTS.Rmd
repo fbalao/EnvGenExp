@@ -1,0 +1,122 @@
+---
+title: "EnvExp_Dactylorhiza_RESULTS"
+author: "F Balao"
+date: "27 de marzo de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Bioclim variables
+
+Load bioclimEdgeR function to perform EdgeR analysis
+```{r }
+source("EdgeR_withoutreplicates.R")
+```
+
+
+## Loop on bioclim variables
+
+```{r}
+biodata<-"biodata2.tsv"
+biodata2<-read.table(biodata)
+data<-"/home/fbalao/Datos/ARTICULO/Dacthylorhizapolyploids/Dactylorhiza_4xExpression/data/19.01.2017.counts.txt"
+
+res<-list()
+var<-colnames(biodata2)
+for (i in 1: length(colnames(biodata2))){
+  res[[i]]<-bioclimEdgeR(data, var[i], filtercpm=0.1)
+  }
+names(res)<-var
+```
+
+```{r}
+for (i in 1:length(res)) {
+  write.csv(res[i], file=paste0(names(res)[i], ".txt"))
+}
+```
+
+#pH
+
+```{r}
+
+pH<-read.table("pH.tsv", row.names=1, na.strings = "NA")
+pH2<-apply(pH[,-c(1:3)],1,mean,na.rm=T)
+names(pH2)[1:4]<-c("tB1830_1", "tB1830_2", "tB1833_1", "tB1833_2")
+pH2[pH2=="NaN"]<-NA
+pH3<-pH2
+}
+```
+
+
+
+```{r}
+library(edgeR) # version 3.16.5
+#load counts
+data<-"/home/fbalao/Datos/ARTICULO/Dacthylorhizapolyploids/Dactylorhiza_4xExpression/data/19.01.2017.counts.txt"
+counttable = read.table(data, header = TRUE, row.names = 1) 
+colnames(counttable)[1:4]<-c("tB1830_1", "tB1830_2", "tB1833_1", "tB1833_2") #Pool ebudensis and traunsteineri
+head(counttable)
+
+
+
+#Remove species and replicates
+species<-factor(substr(colnames(counttable),1,1))
+toremove<-species=="i"| species=="f"
+counttable2<-counttable[,-c(5:14)]
+markreplicates<-c(2,4,10,14,19,21,23,27)
+counttable3<-counttable2[,-markreplicates] #remove replicates
+
+pH4<-pH3[colnames(counttable3)]
+
+#EdgeR analysis
+ edesignbio <- model.matrix(~pH4)
+
+## Make new DGEList, normalize by library size, and estimate dispersion allowing possible trend with average count size
+
+  e <- DGEList(counts=counttable3)
+ 
+ #filter (optional?)
+ keep <- rowSums(cpm(e)>2) >= 9
+ e <- e[keep, , keep.lib.sizes=FALSE]
+ 
+ 
+ #recompute library sizes 
+ e$samples$lib.size <- colSums(e$counts)
+
+#Normalizing
+e <- calcNormFactors(e,method = "upperquartile")
+e <- estimateGLMCommonDisp(e, edesignbio)
+e <- estimateGLMTrendedDisp(e, edesignbio)
+e <- estimateGLMTagwiseDisp(e, edesignbio)
+
+## MDS Plot
+plotMDS(e, main="edgeR MDS Plot")
+
+## Biological coefficient of variation plot
+plotBCV(e, cex=0.4, main="edgeR: Biological coefficient of variation (BCV) vs abundance")
+
+## Fit the model, testing the coefficient for the trausteineri vs majalis comparison
+efit <- glmFit(e, edesignbio)
+efit <- glmLRT(efit, coef=2)
+
+## Make a table of results
+etable <- topTags(efit, n=nrow(e))$table
+etable <- etable[order(etable$FDR), ]
+print(etable)
+write.csv(etable, file="pH.txt")
+```
+
+```{r, echo=F}
+plotbio<-function(cluster,EdgeRobj){
+colspecies<-factor(substr(colnames(EdgeRobj$counts),1,1))
+plot(pH4, cpm(EdgeRobj$counts)[cluster,], xlab="pH", col=c(2,3)[colspecies], main="", pch=16, ylab="CPM")
+legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=16, cex=0.7)
+}
+```
+
+Plot top 6 contigs
+```{r}
+cpm(e$counts)["Cluster-6527.0",]
