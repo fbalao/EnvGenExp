@@ -80,7 +80,27 @@ res$pop <- substr(res$ID,5,9)
 
 meanres<-with(res, aggregate(cbind(bio1,bio2,bio3,bio4,bio5,bio6,bio7,bio10,bio11)~as.factor(res$species):as.factor(res$pop), FUN=mean))
 
-###########################333333
+
+####################################3
+#Loop to create xts objects for each datalogger
+
+data<-split(datos2, by="ID")
+res<-data.frame()
+for (i in 1: length(data)){
+  subdata<-as.xts(data[[i]][,c(1,2)])
+  subdata<-subdata[.indexmon(subdata)%in% c(5)]
+ res[i,1]<-mean(apply.monthly(subdata,FUN = max))
+ res[i,2]<-mean(apply.monthly(subdata,FUN = min))}
+
+colnames(res)<-c("maxJune","minJune")
+res$ID<-names(data)
+res$species <- substr(res$ID,1,3) 
+res$pop <- substr(res$ID,5,9) 
+
+meanres<-with(res, aggregate(cbind(maxJune,minJune)~as.factor(res$species):as.factor(res$pop), FUN=mean))
+
+
+#######################333333
 # Some analysis and plots
 
 
@@ -92,3 +112,45 @@ diftes[i]<-tetst$p.value
 
 boxplot(res$bio4~res$pop, col=c(2,3)[as.factor(res$species)])
 
+
+
+###################################
+### SOIL analysis
+###############################
+setwd("/home/fbalao/Datos/R/Rpackages/EnvGenExp/")
+soil<-read.table("fullsoil.csv", header=T)
+
+soil$indexsoil<-paste(substr(soil$Label_code,1,nchar(as.character(soil$Label_code))-1), soil$species, sep="_")
+
+soilmean<-aggregate(.~indexsoil, data=soil[,-c(1,2)], FUN = function(x) mean(x, na.rm=TRUE),na.action = na.pass)
+soilmean
+
+meanres2<-meanres[-c(6,7),]
+
+levels(meanres2$`as.factor(res$species)`)[levels(meanres2$`as.factor(res$species)`)=="maj"] <- "majalis"
+levels(meanres2$`as.factor(res$species)`)[levels(meanres2$`as.factor(res$species)`)=="tra"] <- "trau"
+levels(meanres2$`as.factor(res$pop)`) <- gsub("_", "", levels(meanres2$`as.factor(res$pop)`))
+rownames(meanres2)<-paste(meanres2$`as.factor(res$pop)`, meanres2$`as.factor(res$species)`, sep="_")
+rownames(soilmean)<-soilmean$indexsoil
+## BRIT 2 stuf
+soilmean2 <- rbind(soilmean, BRI_2_trau = soilmean[soilmean$indexsoil=="BRI_1_trau",])
+
+## MERGE SOIL AND TEMP
+soil.temp <- cbind(soilmean2[order(rownames(soilmean2)),], meanres2[order(rownames(meanres2)),])
+
+######################################################################
+############ IMPORT COORDNATES ALLOWS MAP IND-POP LINK
+#######################################################################
+coordinates <- read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/polyploidCoordinates.txt", header = T)
+coordinates
+
+counts<-read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/datFilteredCounts.txt")
+
+soil.temp<-soil.temp[order(soil.temp$indexsoil),]
+coordinates<-coordinates[order(coordinates$Population),]
+
+
+#PH
+
+ph<-read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/pH.txt", header=T)
+phmeans<-colMeans(ph, na.rm = T)
