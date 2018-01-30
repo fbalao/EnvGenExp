@@ -10,8 +10,7 @@ head(counttable)
 # #Load climatic variables
 #load(biodata) #This load the bioclim variables
 #rownames(biodata2)<-colnames(counttable)
-biodata3 <- as.data.frame(biodata)
-
+biodata3 <- read.table(biodata, header = TRUE, row.names = 1) 
 
 #Remove species and replicates
 species<-factor(substr(colnames(counttable),1,1))
@@ -79,9 +78,15 @@ legend("topright",legend = c("D. majalis", "D. traunsteineri"), col=c(2,3), pch=
 }
 
 ####### Loop
-# res<-list()
-# var<-colnames(biodata2)
-# for (i in 1: length(colnames(biodata2))){
-#   res[[i]]<-bioclimEdgeR(var[i])
-#   }
-# names(res)<-var
+res<-list()
+var<-colnames(read.table(biodatos, header = TRUE, row.names = 1)) 
+for (i in 1: length(var)){
+  res[[i]]<-bioclimEdgeR(datos,biodatos,var[i],0.05)
+  }
+fdrt<-function(x){subset(x,x$FDR<=0.05)} #Function to extract contigs with less tghan 0.05 in FDR
+res2<-lapply(res,fdrt)# Apply function to the list
+#Savetofiles
+for (i in 1:length(res2)) {
+  write.table(rownames(res2[[i]]), file=paste0("./Results/","contigs_","CPM0.05_", names(res2)[i], ".txt"), sep="\t",col.names = F,row.names = F)
+  write.table(res2[[i]], file=paste0("./Results/","resultsEdgeR_","CPM0.05_", names(res2)[i], ".txt"), sep="\t")
+}
