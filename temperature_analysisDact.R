@@ -61,6 +61,7 @@ data<-split(datos2, by="ID")
 res<-data.frame()
 for (i in 1: length(data)){
 subdata<-as.xts(data[[i]][,c(1,2)])
+subdata["/2015 & /2016"] # Comment if you want the complet dataset
 res[i,1]<-bio1(subdata)
 res[i,2]<-bio2(subdata)
 res[i,3]<-bio3(subdata)
@@ -74,3 +75,20 @@ res[i,9]<-bio11(subdata)
 
 colnames(res)<-c("bio1","bio2","bio3","bio4","bio5","bio6","bio7","bio10","bio11")
 res$ID<-names(data)
+res$species <- substr(res$ID,1,3) 
+res$pop <- substr(res$ID,5,9) 
+
+meanres<-with(res, aggregate(cbind(bio1,bio2,bio3,bio4,bio5,bio6,bio7,bio10,bio11)~as.factor(res$species):as.factor(res$pop), FUN=mean))
+
+###########################333333
+# Some analysis and plots
+
+
+diftes<-numeric()
+for (i in 1:9){
+tetst<-t.test(res[,i]~res[,11])
+diftes[i]<-tetst$p.value
+}
+
+boxplot(res$bio4~res$pop, col=c(2,3)[as.factor(res$species)])
+

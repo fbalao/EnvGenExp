@@ -88,5 +88,40 @@ res2<-lapply(res,fdrt)# Apply function to the list
 #Savetofiles
 for (i in 1:length(res2)) {
   write.table(rownames(res2[[i]]), file=paste0("./Results/","contigs_","CPM0.05_", names(res2)[i], ".txt"), sep="\t",col.names = F,row.names = F)
-  write.table(res2[[i]], file=paste0("./Results/","resultsEdgeR_","CPM0.05_", names(res2)[i], ".txt"), sep="\t")
+  write.table(res[[i]], file=paste0("./Results/","resultsEdgeR_","CPM0.05_", names(res2)[i], ".txt"), sep="\t")
+}
+
+
+####### Loop
+res<-list()
+var<-colnames(read.table(biodatos, header = TRUE, row.names = 1)) 
+for (i in 1: length(var)){
+  res[[i]]<-bioclimEdgeR(datos,biodatos,var[i],0.01)
+}
+fdrt<-function(x){subset(x,x$FDR<=0.05)} #Function to extract contigs with less tghan 0.05 in FDR
+names(res)<-var
+res2<-lapply(res,fdrt)# Apply function to the list
+#Savetofiles
+for (i in 1:length(res2)) {
+  write.table(rownames(res2[[i]]), file=paste0("./Results/","contigs_","CPM0.01_", names(res2)[i], ".txt"), sep="\t",col.names = F,row.names = F)
+  write.table(res[[i]], file=paste0("./Results/","resultsEdgeR_","CPM0.01_", names(res2)[i], ".txt"), sep="\t")
+}
+
+
+
+####### Loop ENVIREM
+biodatos<-"envirme_vcf_data.txt"
+datos<-"/home/fbalao/Datos/ARTICULO/Dacthylorhizapolyploids/Dactylorhiza_4xExpression/data/19.01.2017.counts.txt"
+res<-list()
+var<-colnames(read.table(biodatos, header = TRUE, row.names = 1)) 
+for (i in 1: length(var)){
+  res[[i]]<-bioclimEdgeR(datos,biodatos,var[i],0.05)
+}
+fdrt<-function(x){subset(x,x$FDR<=0.05)} #Function to extract contigs with less tghan 0.05 in FDR
+names(res)<-var
+res2<-lapply(res,fdrt)# Apply function to the list
+#Savetofiles
+for (i in 1:length(res2)) {
+  write.table(rownames(res2[[i]]), file=paste0("./Results/","contigs_","CPM0.05_", names(res2)[i], ".txt"), sep="\t",col.names = F,row.names = F)
+  write.table(res[[i]], file=paste0("./Results/","resultsEdgeR_","CPM0.05_", names(res2)[i], ".txt"), sep="\t")
 }
