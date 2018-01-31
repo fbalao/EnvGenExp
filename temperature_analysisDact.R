@@ -1,6 +1,7 @@
 library(data.table)
 library(ggplot2)
 library(xts)
+library(edgeR)
 
 setwd("/home/fbalao/Datos/Dactylorhiza/environment/temperature")
 
@@ -84,21 +85,21 @@ meanres<-with(res, aggregate(cbind(bio1,bio2,bio3,bio4,bio5,bio6,bio7,bio10,bio1
 ####################################3
 #Loop to create xts objects for each datalogger
 
-data<-split(datos2, by="ID")
-res<-data.frame()
-for (i in 1: length(data)){
-  subdata<-as.xts(data[[i]][,c(1,2)])
-  subdata<-subdata[.indexmon(subdata)%in% c(5)]
- res[i,1]<-mean(apply.monthly(subdata,FUN = max))
- res[i,2]<-mean(apply.monthly(subdata,FUN = min))}
-
-colnames(res)<-c("maxJune","minJune")
-res$ID<-names(data)
-res$species <- substr(res$ID,1,3) 
-res$pop <- substr(res$ID,5,9) 
-
-meanres<-with(res, aggregate(cbind(maxJune,minJune)~as.factor(res$species):as.factor(res$pop), FUN=mean))
-
+# data<-split(datos2, by="ID")
+# res<-data.frame()
+# for (i in 1: length(data)){
+#   subdata<-as.xts(data[[i]][,c(1,2)])
+#   subdata<-subdata[.indexmon(subdata)%in% c(5)]
+#  res[i,1]<-mean(apply.monthly(subdata,FUN = max))
+#  res[i,2]<-mean(apply.monthly(subdata,FUN = min))}
+# 
+# colnames(res)<-c("maxJune","minJune")
+# res$ID<-names(data)
+# res$species <- substr(res$ID,1,3) 
+# res$pop <- substr(res$ID,5,9) 
+# 
+# meanres<-with(res, aggregate(cbind(maxJune,minJune)~as.factor(res$species):as.factor(res$pop), FUN=mean))
+# 
 
 #######################333333
 # Some analysis and plots
@@ -137,20 +138,85 @@ soilmean2 <- rbind(soilmean, BRI_2_trau = soilmean[soilmean$indexsoil=="BRI_1_tr
 
 ## MERGE SOIL AND TEMP
 soil.temp <- cbind(soilmean2[order(rownames(soilmean2)),], meanres2[order(rownames(meanres2)),])
-
+rownames(soil.temp)->soil.temp$indexsoil
 ######################################################################
 ############ IMPORT COORDNATES ALLOWS MAP IND-POP LINK
 #######################################################################
 coordinates <- read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/polyploidCoordinates.txt", header = T)
-coordinates
+keycoo<-unique(coordinates$Population)
 
 counts<-read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/datFilteredCounts.txt")
 
-soil.temp<-soil.temp[order(soil.temp$indexsoil),]
-coordinates<-coordinates[order(coordinates$Population),]
-
+soil.temp<-soil.temp[order(rownames(soil.temp)),]
 
 #PH
 
 ph<-read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/pH.txt", header=T)
 phmeans<-colMeans(ph, na.rm = T)
+phmeans2<-phmeans[order(names(phmeans))]
+
+na.omit(merge(phmeans2,soil.temp,by="row.names",all.x=TRUE))
+
+toremove_env<-setdiff(rownames(soil.temp), levels(coordinates$Population))
+
+
+
+envmatrix<-(merge(phmeans2,soil.temp,by="row.names",all.x=TRUE))
+rownames(envmatrix)<-envmatrix$Row.names
+finalenvmatrix<-envmatrix[as.character(keycoo),]
+colnames(finalenvmatrix)[26]<-"species"
+colnames(finalenvmatrix)[27]<-"pop"
+colnames(finalenvmatrix)[2]<-"pHfield"
+
+finalenvmatrix2<-finalenvmatrix[,-c(1,3,26,27)]
+finalenvmatrix3<-finalenvmatrix2[, ! colnames(finalenvmatrix2) %in% c("Al", "Pb","Ca","Cd","Cu","Mo", "Fe", "Mg", "Mn", "Ni", "P", "S", "Zn", "Carbon."),]
+# Asses multicollinearity
+mtemp<-finalenvmatrix[,-c(1,3,15,19,27,26)] # Removing factor but also Mo and Pb
+library('usdm')
+x<-vifstep(finalenvmatrix3, th=10)
+
+# selected<-setdiff(x@variables,x@excluded)
+# reducedmatrix<-subset(mtemp, select = selected)
+
+# Duplicate rows
+ind<-table(coordinates$Population) #freq ind per pop
+indsorted<-ind[rownames(finalenvmatrix3)]
+finalenvmatrixrep<-finalenvmatrix3[rep(seq_len(nrow(finalenvmatrix3)), times=indsorted),]
+
+
+##################################################################################################################3333
+####################### CORRELATIONS ENV-GENE EXPRESSION 
+######################
+##################################################################################################################3
+
+#load counts
+filteredcounts = read.table("datFilteredCounts.txt", header = TRUE, row.names = 1) 
+load("normSet.RData")
+colnames(normSet$W)<-c("W1","W2","W3")
+#Make the set allowing normalisation + normalisation
+#set <- makeRUVset(dat = dat.filtered)
+#normSet <- makeRUVrepNormalisedSet(set, rownames(counts(set)), 3, batchMatrix)
+
+reslist<-list()
+
+for (i in 1:dim(finalenvmatrixrep)[2]){
+design <- model.matrix(~finalenvmatrixrep[,i]+normSet$W)
+y <- DGEList(counts = filteredcounts, group = NULL) #Don't forget, model is taking into account the RUV normalised matrix of counts
+#get an idea of how to filter
+y <- calcNormFactors(y)
+y <- estimateDisp(y, design = design, robust = T)
+#plotBCV(y)
+fit <- glmFit(y, design, robust = T)
+hist(fit$coefficients[,2], breaks = 100)
+res<-glmLRT(fit, coef=2, contrast=NULL)
+de = decideTestsDGE(res, adjust.method="fdr", p.value = 0.05)
+de.genes = rownames(res)[as.logical(de)]
+#plotSmear(res, de.tags = de.genes, cex=0.5, main="MA-plot (fdr <= 0.05)")
+reslist[[i]] <- topTags(res, n=nrow(filteredcounts))
+}
+names(reslist)<-colnames(finalenvmatrixrep)
+
+#loadRSD("env_gen_analysis.RDS")
+plot(finalenvmatrixrep$Nitrogen., normSet$normalizedCounts['comp3606_c0_seq1',] , cex=1, pch=1, ylab="Normalized counts", xlab="Nitrogen", col=1, main="comp3606_c0_seq1")
+
+
