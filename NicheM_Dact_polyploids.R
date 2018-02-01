@@ -16,6 +16,19 @@ library(rgeos)
 library(ade4)
 library(caret)
 
+###############################33
+# VCF
+
+coordinatesdact <- read.table("/home/fbalao/Datos/R/Rpackages/EnvGenExp/polyploidCoordinates.txt", header = T)
+coordinates(coordinatesdact)<- ~longitude+ latitude
+crs.geo <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84")
+proj4string(coordinatesdact) <- crs.geo 
+
+vcf<-raster("/home/fbalao/Datos/GPS/bioclim/MODIS/out.tif")
+coordinatesdact$vcf<-extract(vcf,coordinatesdact)
+species<-as.factor(substr(coordinatesdact$Population, nchar(as.character(coordinatesdact$Population))-1,nchar(as.character(coordinatesdact$Population))))
+boxplot(coordinatesdact$vcf~species, col=c(2,3))
+
 
 #majalis data
 Dfucloc<-occ_search(scientificName = c("Dactylorhiza majalis subsp. majalis","Dactylorhiza majalis"),hasGeospatialIssue=FALSE,fields='minimal', limit=50000 ,hasCoordinate=TRUE, basisOfRecord="PRESERVED_SPECIMEN")

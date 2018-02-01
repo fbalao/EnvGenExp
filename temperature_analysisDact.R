@@ -182,7 +182,7 @@ x<-vifstep(finalenvmatrix3, th=10)
 ind<-table(coordinates$Population) #freq ind per pop
 indsorted<-ind[rownames(finalenvmatrix3)]
 finalenvmatrixrep<-finalenvmatrix3[rep(seq_len(nrow(finalenvmatrix3)), times=indsorted),]
-
+saveRDS(finalenvmatrixrep, "finalenvmatrixrep.RDS")
 
 ##################################################################################################################3333
 ####################### CORRELATIONS ENV-GENE EXPRESSION 
